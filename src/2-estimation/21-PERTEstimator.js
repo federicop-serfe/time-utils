@@ -42,7 +42,9 @@ class PERTEstimator {
     const concatMatricesHorizontally = (A, B) =>
       A.map((row, idx) => row.concat(B[idx]));
 
-    const guesses = this.ioHandler.read(this.guessesRange);
+    const guesses = this.timeConverter.matrixToMin(
+      this.ioHandler.read(this.guessesRange)
+    );
 
     const eeArr = guesses.map((subtask) => this.statistic.subtask.ee(subtask));
     const sdArr = guesses.map((subtask) => this.statistic.subtask.sd(subtask));
@@ -58,10 +60,10 @@ class PERTEstimator {
       )
     );
 
-    this.ioHandler.write(this.estimationsRange, estimations);
+    this.ioHandler.write(estimations, this.estimationsRange);
     this.ioHandler.write(
-      this.reportCell,
-      this.toString(estimations, percentualRisk)
+      this.toString(estimations, percentualRisk),
+      this.reportCell
     );
   }
 
@@ -69,7 +71,7 @@ class PERTEstimator {
     const zeros = this.ioHandler
       .read(this.guessesRange)
       .map((row) => row.map(() => 0));
-    this.ioHandler.write(this.guessesRange, zeros);
+    this.ioHandler.write(zeros, this.guessesRange);
     this.estimate();
   }
 }

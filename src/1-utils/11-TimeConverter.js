@@ -12,6 +12,12 @@ class TimeConverter {
   }
 
   matrixToMin(matrixInHAndMin) {
+    if (
+      !Array.isArray(matrixInHAndMin) ||
+      matrixInHAndMin[0].length % 2 !== 0
+    ) {
+      return [];
+    }
     return matrixInHAndMin.map((row, i) => {
       let aux = [];
       for (let j = 0; j < row.length; j += 2) {
@@ -22,10 +28,17 @@ class TimeConverter {
   }
 
   matrixToHAndMin(matrixInMin) {
+    if (!Array.isArray(matrixInMin)) {
+      return [];
+    }
     return matrixInMin.map((row) =>
       row
         .map((val) => this.toHAndMin(val))
         .reduce((acc, curr) => [...acc, ...curr])
     );
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = TimeConverter;
 }

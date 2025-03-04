@@ -1,0 +1,26 @@
+{
+  "name": "time-utils",
+  "version": "1.0.0",
+  "description": "Time estimation and tracking utilities with google AppScript",
+  "scripts": {
+    "test": "mocha --ui=\"tdd\" --reporter=\"spec\" --recursive"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/federicop-serfe/time-utils.git"
+  },
+  "author": "Federico I. Pacheco Pilan",
+  "bugs": {
+    "url": "https://github.com/federicop-serfe/time-utils/issues"
+  },
+  "homepage": "https://github.com/federicop-serfe/time-utils#readme",
+  "devDependencies": {
+    "@stryker-mutator/mocha-runner": "^8.7.1",
+    "chai": "4.5",
+    "faker": "^5.5.3",
+    "mocha": "^11.1.0",
+    "nyc": "^17.1.0",
+    "sinon": "^19.0.2",
+    "stryker-cli": "^1.0.2"
+  }
+}
