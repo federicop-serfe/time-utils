@@ -39,9 +39,6 @@ class PERTEstimator {
   }
 
   estimate() {
-    const concatMatricesHorizontally = (A, B) =>
-      A.map((row, idx) => row.concat(B[idx]));
-
     const guesses = this.timeConverter.matrixToMin(
       this.ioHandler.read(this.guessesRange)
     );
@@ -54,7 +51,7 @@ class PERTEstimator {
     const percentualRisk = ee > 0 ? Math.round(((e - ee) / ee) * 100) : 0;
 
     const estimations = this.timeConverter.matrixToHAndMin(
-      concatMatricesHorizontally(
+      MatrixUtils.concatHorizontally(
         [...eeArr.map((ee) => [ee]), [ee], [e]],
         [...sdArr.map((sd) => [sd]), [sd], [0]]
       )

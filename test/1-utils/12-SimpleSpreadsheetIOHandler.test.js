@@ -45,6 +45,7 @@ suite("SimpleSpreadsheetIOHandler", function () {
     let handler;
 
     setup(function () {
+      spreadsheetStub.getSheetByName.returns(sheetStub);
       handler = new SimpleSpreadsheetIOHandler("Sheet1");
     });
 
@@ -85,6 +86,7 @@ suite("SimpleSpreadsheetIOHandler", function () {
     let handler;
 
     setup(function () {
+      spreadsheetStub.getSheetByName.returns(sheetStub);
       handler = new SimpleSpreadsheetIOHandler("Sheet1");
     });
 

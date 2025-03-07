@@ -14,6 +14,7 @@ class TimeConverter {
   matrixToMin(matrixInHAndMin) {
     if (
       !Array.isArray(matrixInHAndMin) ||
+      matrixInHAndMin.length === 0 ||
       matrixInHAndMin[0].length % 2 !== 0
     ) {
       return [];

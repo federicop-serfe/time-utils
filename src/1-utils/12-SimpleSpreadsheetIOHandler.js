@@ -54,7 +54,7 @@ class SimpleSpreadsheetIOHandler {
     if (!this.isCell(reference) && !this.isRange(reference)) {
       throw new Error(`Invalid reference: "${defaultReference}"`);
     }
-    this.defaultReference = defaultReference;
+    this.defaultReference = reference;
   }
 }
 
