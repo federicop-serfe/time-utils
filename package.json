@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Time estimation and tracking utilities with google AppScript",
   "scripts": {
-    "test": "mocha --ui=\"tdd\" --reporter=\"min\" --recursive",
+    "test": "mocha --ui=\"tdd\" --reporter=\"spec\" --recursive",
     "test:debug": "npm test -- --inspect-brk"
   },
   "repository": {

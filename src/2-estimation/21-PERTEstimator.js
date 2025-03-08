@@ -66,9 +66,9 @@ class PERTEstimator {
   }
 
   reset() {
-    const zeros = this.guessesInput.read().map((row) => row.map(() => 0));
-    this.guessesInput.write(zeros);
-    this.estimate();
+    this.guessesInput.fillWith(0);
+    this.estimationsOutput.fillWith(0);
+    this.reportOutput.fillWith("");
   }
 }
 

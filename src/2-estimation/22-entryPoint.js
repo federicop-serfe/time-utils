@@ -4,15 +4,15 @@ const GUESSES_RANGE = "C4:H6";
 const ESTIMATION_RANGE = "I4:L8";
 const REPORT_CELL = "I11";
 
-const guessesInput = new SimpleSpreadsheetIOHandler(
+const guessesInput = new SpreadsheetIOHandler(
   ESTIMATION_SHEET_NAME,
   GUESSES_RANGE
 );
-const estimationsOutput = new SimpleSpreadsheetIOHandler(
+const estimationsOutput = new SpreadsheetIOHandler(
   ESTIMATION_SHEET_NAME,
   ESTIMATION_RANGE
 );
-const reportOutput = new SimpleSpreadsheetIOHandler(
+const reportOutput = new SpreadsheetIOHandler(
   ESTIMATION_SHEET_NAME,
   REPORT_CELL
 );

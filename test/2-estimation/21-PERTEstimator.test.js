@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { stub, spy } = require("sinon");
-const { suite, test, setup } = require("mocha");
+const { stub, spy, restore } = require("sinon");
+const { suite, test, setup, teardown } = require("mocha");
 const PERTEstimator = require("../../src/2-estimation/21-PERTEstimator");
 
 suite("PERTEstimator", function () {
@@ -8,9 +8,19 @@ suite("PERTEstimator", function () {
 
   setup(function () {
     risk = 2;
-    guessesInput = { read: stub(), write: spy() };
-    estimationsOutput = { write: stub() };
-    reportOutput = { write: spy() };
+    guessesInput = {
+      read: stub(),
+      write: spy(),
+      fillWith: spy(),
+    };
+    estimationsOutput = {
+      write: stub(),
+      fillWith: spy(),
+    };
+    reportOutput = {
+      write: spy(),
+      fillWith: spy(),
+    };
     estimator = new PERTEstimator(
       risk,
       guessesInput,
@@ -19,7 +29,15 @@ suite("PERTEstimator", function () {
     );
   });
 
+  teardown(function () {
+    restore();
+  });
+
   suite("estimate", function () {
+    teardown(function () {
+      restore();
+    });
+
     test("performs calculations correctly", function () {
       guessesInput.read.returns([
         [1, 0, 2, 15, 3, 30],
@@ -61,38 +79,16 @@ suite("PERTEstimator", function () {
   });
 
   suite("reset", function () {
-    const allZeros = (mat) => {
-      let allZeros = true;
-      mat.forEach((row) => {
-        row.forEach((val) => {
-          if (val !== 0) {
-            allZeros = false;
-          }
-        });
-      });
-      return allZeros;
-    };
+    teardown(function () {
+      restore();
+    });
 
-    test("resets estimations and report", function () {
-      guessesInput.read.onCall(0).returns([
-        [1, 0, 2, 15, 3, 30],
-        [4, 45, 5, 0, 6, 15],
-        [7, 30, 8, 45, 9, 0],
-      ]);
-      guessesInput.read.onCall(1).returns([
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-      ]);
-
-      debugger;
+    test("resets guesses, estimations and report", function () {
       estimator.reset();
 
-      const guesses = guessesInput.write.getCall(0).args[0];
-      const estimations = estimationsOutput.write.getCall(0).args[0];
-
-      assert(allZeros(guesses));
-      assert(allZeros(estimations));
+      assert(estimationsOutput.fillWith.calledOnce);
+      assert(reportOutput.fillWith.calledOnce);
+      assert(guessesInput.fillWith.calledOnce);
     });
   });
 });

@@ -1,27 +1,23 @@
 class TimeTracker {
   constructor(
-    sheetName,
-    ticketRange,
-    estimatedTimeRange,
-    dayRange,
-    startTimeRange,
-    endTimeRange,
-    summaryOutputRange,
-    distributedOutputRange
+    ticketsInput,
+    estimatedTimesInput,
+    daysInput,
+    startTimesInput,
+    endTimesInput,
+    summaryOutput,
+    distributedOutput
   ) {
     this.PREVIOUS_TICKET_FLAG = "prev";
-    this.sheetName = sheetName;
-    this.ticketRange = ticketRange;
-    this.estimatedTimeRange = estimatedTimeRange;
-    this.dayRange = dayRange;
-    this.startTimeRange = startTimeRange;
-    this.endTimeRange = endTimeRange;
-    this.summaryOutputRange = summaryOutputRange;
-    this.distributedOutputRange = distributedOutputRange;
 
-    this.trackingSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
-      this.sheetName
-    );
+    this.ticketsInput = ticketsInput;
+    this.estimatedTimesInput = estimatedTimesInput;
+    this.daysInput = daysInput;
+    this.startTimesInput = startTimesInput;
+    this.endTimesInput = endTimesInput;
+    this.summaryOutput = summaryOutput;
+    this.distributedOutput = distributedOutput;
+
     this.timeConverter = new TimeConverter();
     this.dayWorkingMinutes = 60 * 8;
     this.timeBalancer = new BestEffortBalancer();
@@ -99,7 +95,7 @@ class TimeTracker {
         sum(ticketTimes.map((ticket) => ticket.real + findFake(ticket))),
       ]);
 
-      const sheetData = concatMatricesHorizontally(
+      return concatMatricesHorizontally(
         concatMatricesHorizontally(
           concatMatricesHorizontally(
             namesMat,
@@ -109,18 +105,6 @@ class TimeTracker {
         ),
         this.timeConverter.matrixToHAndMin(totalTimesMat)
       );
-
-      // Append empty strings to fill the remaining space
-      for (
-        let i = 0;
-        i <
-        this.trackingSheet.getRange(this.summaryOutputRange).getNumRows() -
-          namesMat.length;
-        i++
-      ) {
-        sheetData.push(["", "", "", "", "", "", ""]);
-      }
-      return sheetData;
     };
 
     const getDistributedOutput = (distributedTimes) => {
@@ -130,48 +114,25 @@ class TimeTracker {
       ]);
       const timesMat = distributedTimes.map((ticket) => [ticket.total]);
 
-      const sheetData = concatMatricesHorizontally(
+      return concatMatricesHorizontally(
         namesDaysMat,
         this.timeConverter.matrixToHAndMin(timesMat)
       );
-
-      // Append empty strings to fill the remaining space
-      for (
-        let i = 0;
-        i <
-        this.trackingSheet.getRange(this.distributedOutputRange).getNumRows() -
-          namesDaysMat.length;
-        i++
-      ) {
-        sheetData.push(["", "", "", ""]);
-      }
-
-      return sheetData;
     };
 
     // --------------------------------
     // Retrieve data
-    const tickets = cleanData(
-      this.trackingSheet.getRange(this.ticketRange).getValues()
-    );
+    const tickets = cleanData(this.ticketsInput.read());
     const estimatedTimes = cleanDataSpecial(
       tickets,
-      this.timeConverter.matrixToMin(
-        this.trackingSheet.getRange(this.estimatedTimeRange).getValues()
-      )
+      this.timeConverter.matrixToMin(this.estimatedTimesInput.read())
     );
-    const days = cleanData(
-      this.trackingSheet.getRange(this.dayRange).getValues()
-    );
+    const days = cleanData(this.daysInput.read());
     const startTimes = cleanData(
-      this.timeConverter.matrixToMin(
-        this.trackingSheet.getRange(this.startTimeRange).getValues()
-      )
+      this.timeConverter.matrixToMin(this.startTimesInput.read())
     );
     const endTimes = cleanData(
-      this.timeConverter.matrixToMin(
-        this.trackingSheet.getRange(this.endTimeRange).getValues()
-      )
+      this.timeConverter.matrixToMin(this.endTimesInput.read())
     );
 
     // Simplify
@@ -198,60 +159,19 @@ class TimeTracker {
     );
 
     // Summary output
-    const summaryOutput = getSummaryOutput(ticketTimes, fakeTimes);
-    this.trackingSheet
-      .getRange(this.summaryOutputRange)
-      .setValues(summaryOutput);
+    this.summaryOutput.write(getSummaryOutput(ticketTimes, fakeTimes));
 
     // Distributed across days output
-    const distributedOutput = getDistributedOutput(distributedTimes);
-    this.trackingSheet
-      .getRange(this.distributedOutputRange)
-      .setValues(distributedOutput);
+    this.distributedOutput.write(getDistributedOutput(distributedTimes));
   }
-}
 
-// -------------------------------------------------------------------------------------------------
-
-const TRACKING_SHEET_NAME = "Tracking";
-const trackingSheet =
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TRACKING_SHEET_NAME);
-
-const TRACKING_TICKET_RANGE = "B7:B57";
-const TRACKING_ESTIMATED_TIME_RANGE = "C7:D57";
-const TRACKING_DAY_RANGE = "E7:E57";
-const TRACKING_START_TIME_RANGE = "F7:G57";
-const TRACKING_END_TIME_RANGE = "H7:I57";
-const TRACKING_SUMMARY_OUTPUT_RANGE = "K7:Q57";
-const TRACKING_DISTRIBUTED_OUTPUT_RANGE = "S7:V57";
-const trackingRanges = [
-  TRACKING_TICKET_RANGE,
-  TRACKING_ESTIMATED_TIME_RANGE,
-  TRACKING_DAY_RANGE,
-  TRACKING_START_TIME_RANGE,
-  TRACKING_END_TIME_RANGE,
-  TRACKING_SUMMARY_OUTPUT_RANGE,
-  TRACKING_DISTRIBUTED_OUTPUT_RANGE,
-];
-
-function computeTimeTracking() {
-  timeTracker = new TimeTracker(TRACKING_SHEET_NAME, ...trackingRanges);
-  timeTracker.track();
-}
-
-function resetTimeTracking() {
-  let zeros, zerosRow, cols, rows;
-  trackingRanges.forEach((r) => {
-    zeros = [];
-    rows = trackingSheet.getRange(r).getNumRows();
-    cols = trackingSheet.getRange(r).getNumColumns();
-    for (let i = 0; i < rows; i++) {
-      zerosRow = [];
-      for (let j = 0; j < cols; j++) {
-        zerosRow.push("");
-      }
-      zeros.push(zerosRow);
-    }
-    trackingSheet.getRange(r).setValues(zeros);
-  });
+  reset() {
+    this.ticketsInput.fillWith("");
+    this.estimatedTimesInput.fillWith("");
+    this.daysInput.fillWith("");
+    this.startTimesInput.fillWith("");
+    this.endTimesInput.fillWith("");
+    this.summaryOutput.fillWith("");
+    this.distributedOutput.fillWith("");
+  }
 }
