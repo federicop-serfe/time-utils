@@ -20,18 +20,25 @@ suite("SimpleSpreadsheetIOHandler", function () {
     });
 
     test("throws if no sheet name", function () {
-      assert.throws(() => new SimpleSpreadsheetIOHandler());
+      assert.throws(
+        () => new SimpleSpreadsheetIOHandler(),
+        /Sheet name not provided/
+      );
     });
 
     test("throws if sheet not found", function () {
       spreadsheetStub.getSheetByName.returns(null);
-      assert.throws(() => new SimpleSpreadsheetIOHandler("UnknownSheet", "A1"));
+      assert.throws(
+        () => new SimpleSpreadsheetIOHandler("UnknownSheet", "A1"),
+        'Sheet "UnknownSheet" not found'
+      );
     });
 
     test("throws if invalid default reference", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
       assert.throws(
-        () => new SimpleSpreadsheetIOHandler("Sheet1", "InvalidRef")
+        () => new SimpleSpreadsheetIOHandler("Sheet1", "InvalidRef"),
+        /Invalid reference/
       );
     });
 
@@ -78,7 +85,7 @@ suite("SimpleSpreadsheetIOHandler", function () {
     test("throws on read error", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
       sheetStub.getRange.throws(new Error("Some error"));
-      assert.throws(() => handler.read());
+      assert.throws(() => handler.read(), /Error reading reference/);
     });
   });
 
@@ -115,13 +122,16 @@ suite("SimpleSpreadsheetIOHandler", function () {
 
     test("throws if no data", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
-      assert.throws(() => handler.write("A1"));
+      assert.throws(() => handler.write(undefined, "A1"), /Data not provided/);
     });
 
     test("throws on write error", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
       sheetStub.getRange.throws(new Error("Write error"));
-      assert.throws(() => handler.write("data", "A1"));
+      assert.throws(
+        () => handler.write("data", "A1"),
+        /Error writing to reference/
+      );
     });
   });
 });

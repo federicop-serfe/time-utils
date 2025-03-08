@@ -6,7 +6,7 @@ class SimpleSpreadsheetIOHandler {
     this.sheet =
       SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!this.sheet) {
-      throw new Error(`Sheet "${this.sheetName}" not found`);
+      throw new Error(`Sheet "${sheetName}" not found`);
     }
     this.sheetName = sheetName;
 
@@ -52,7 +52,7 @@ class SimpleSpreadsheetIOHandler {
 
   setReference(reference) {
     if (!this.isCell(reference) && !this.isRange(reference)) {
-      throw new Error(`Invalid reference: "${defaultReference}"`);
+      throw new Error(`Invalid reference: "${reference}"`);
     }
     this.defaultReference = reference;
   }

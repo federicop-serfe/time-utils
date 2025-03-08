@@ -7,5 +7,3 @@
 4. Pull changes: clasp pull
 5. Push changes everytime a file is saved: clasp push -w
    Source: https://www.youtube.com/watch?v=lwxiEB-Mnys
-
-> Debugger still has to be done in the browser
