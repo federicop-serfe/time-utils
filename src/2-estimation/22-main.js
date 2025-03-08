@@ -3,12 +3,24 @@ const ESTIMATION_SHEET_NAME = "Estimation";
 const GUESSES_RANGE = "C4:H6";
 const ESTIMATION_RANGE = "I4:L8";
 const REPORT_CELL = "I11";
+
+const guessesInput = new SimpleSpreadsheetIOHandler(
+  ESTIMATION_SHEET_NAME,
+  GUESSES_RANGE
+);
+const estimationsOutput = new SimpleSpreadsheetIOHandler(
+  ESTIMATION_SHEET_NAME,
+  ESTIMATION_RANGE
+);
+const reportOutput = new SimpleSpreadsheetIOHandler(
+  ESTIMATION_SHEET_NAME,
+  REPORT_CELL
+);
 const estimator = new PERTEstimator(
   RISK,
-  ESTIMATION_SHEET_NAME,
-  GUESSES_RANGE,
-  ESTIMATION_RANGE,
-  REPORT_CELL
+  guessesInput,
+  estimationsOutput,
+  reportOutput
 );
 
 function computeTimeEstimation() {

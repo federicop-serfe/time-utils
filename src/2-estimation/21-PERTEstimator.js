@@ -1,6 +1,13 @@
+if (typeof TimeConverter === "undefined") {
+  TimeConverter = require("../1-utils/11-TimeConverter");
+}
+if (typeof MatrixUtils === "undefined") {
+  MatrixUtils = require("../1-utils/13-MatrixUtils");
+}
+
 // See: https://en.wikipedia.org/wiki/Three-point_estimation
 class PERTEstimator {
-  constructor(risk, sheetName, guessesRange, estimationsRange, reportCell) {
+  constructor(risk, guessesInput, estimationsOuput, reportOutput) {
     this.REPORT = [
       "* Analysis / Design",
       "* Implementation",
@@ -9,14 +16,15 @@ class PERTEstimator {
       "> E",
     ];
 
-    this.ioHandler = new SimpleSpreadsheetIOHandler(sheetName);
-    this.guessesRange = guessesRange;
-    this.estimationsRange = estimationsRange;
-    this.reportCell = reportCell;
     this.risk = risk;
+    this.guessesInput = guessesInput;
+    this.estimationsOutput = estimationsOuput;
+    this.reportOutput = reportOutput;
     this.timeConverter = new TimeConverter();
+  }
 
-    this.statistic = {
+  estimate() {
+    const statistic = {
       subtask: {
         // timeArr: [bestCase, mostLikely, worstCase]
         ee: (timeArr) => (timeArr[0] + 4 * timeArr[1] + timeArr[2]) / 6,
@@ -31,22 +39,19 @@ class PERTEstimator {
       },
     };
 
-    this.toString = (estimationInHAndMin, percentualRisk) =>
+    const toString = (estimationInHAndMin, percentualRisk) =>
       `TIME ESTIMATION\n> Subtask:\n${this.REPORT.map(
         (r, idx) =>
           `${r}: ${estimationInHAndMin[idx][0]}h${estimationInHAndMin[idx][1]}min`
       ).join("\n")}\n> Risk: ${percentualRisk}%`;
-  }
 
-  estimate() {
-    const guesses = this.timeConverter.matrixToMin(
-      this.ioHandler.read(this.guessesRange)
-    );
+    // --------------
+    const guesses = this.timeConverter.matrixToMin(this.guessesInput.read());
 
-    const eeArr = guesses.map((subtask) => this.statistic.subtask.ee(subtask));
-    const sdArr = guesses.map((subtask) => this.statistic.subtask.sd(subtask));
-    const ee = this.statistic.task.ee(eeArr);
-    const sd = this.statistic.task.sd(sdArr);
+    const eeArr = guesses.map((subtask) => statistic.subtask.ee(subtask));
+    const sdArr = guesses.map((subtask) => statistic.subtask.sd(subtask));
+    const ee = statistic.task.ee(eeArr);
+    const sd = statistic.task.sd(sdArr);
     const e = ee + this.risk * sd;
     const percentualRisk = ee > 0 ? Math.round(((e - ee) / ee) * 100) : 0;
 
@@ -57,18 +62,17 @@ class PERTEstimator {
       )
     );
 
-    this.ioHandler.write(estimations, this.estimationsRange);
-    this.ioHandler.write(
-      this.toString(estimations, percentualRisk),
-      this.reportCell
-    );
+    this.estimationsOutput.write(estimations);
+    this.reportOutput.write(toString(estimations, percentualRisk));
   }
 
   reset() {
-    const zeros = this.ioHandler
-      .read(this.guessesRange)
-      .map((row) => row.map(() => 0));
-    this.ioHandler.write(zeros, this.guessesRange);
+    const zeros = this.guessesInput.read().map((row) => row.map(() => 0));
+    this.guessesInput.write(zeros);
     this.estimate();
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = PERTEstimator;
 }

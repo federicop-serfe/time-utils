@@ -12,3 +12,7 @@ class MatrixUtils {
     return A.map((row, idx) => row.concat(B[idx]));
   }
 }
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = MatrixUtils;
+}
