@@ -1,3 +1,16 @@
+if (typeof GeneralUtils === "undefined") {
+  GeneralUtils = require("../1-utils/13-GeneralUtils");
+}
+if (typeof BestEffortBalancer === "undefined") {
+  BestEffortBalancer = require("./31-TimeBalancer").BestEffortBalancer;
+}
+if (typeof BestEffortBalancer === "undefined") {
+  LPBalancer = require("./31-TimeBalancer").LPBalancer;
+}
+if (typeof TimeDistributer === "undefined") {
+  TimeDistributer = require("./32-TimeDistributer");
+}
+
 class TimeTracker {
   constructor(
     ticketsInput,
@@ -20,8 +33,8 @@ class TimeTracker {
 
     this.timeConverter = new TimeConverter();
     this.dayWorkingMinutes = 60 * 8;
-    this.timeBalancer = new BestEffortBalancer(0.33);
-    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.33));
+    this.timeBalancer = new BestEffortBalancer(0.15);
+    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.15));
     this.timeDistributer = new TimeDistributer(this.dayWorkingMinutes);
   }
 
@@ -76,9 +89,6 @@ class TimeTracker {
       });
     };
 
-    const concatMatricesHorizontally = (A, B) =>
-      A.map((zerosRow, idx) => zerosRow.concat(B[idx]));
-
     const getSummaryOutput = (ticketTimes, fakeTimes) => {
       const sum = (arr) => arr.reduce((acc, curr) => acc + curr);
       const findFake = (ticket) =>
@@ -99,9 +109,9 @@ class TimeTracker {
         sum(ticketTimes.map((ticket) => ticket.real + findFake(ticket))),
       ]);
 
-      return concatMatricesHorizontally(
-        concatMatricesHorizontally(
-          concatMatricesHorizontally(
+      return GeneralUtils.concatMatricesHorizontally(
+        GeneralUtils.concatMatricesHorizontally(
+          GeneralUtils.concatMatricesHorizontally(
             namesMat,
             this.timeConverter.matrixToHAndMin(realTimesMat)
           ),
@@ -118,7 +128,7 @@ class TimeTracker {
       ]);
       const timesMat = distributedTimes.map((ticket) => [ticket.total]);
 
-      return concatMatricesHorizontally(
+      return GeneralUtils.concatMatricesHorizontally(
         namesDaysMat,
         this.timeConverter.matrixToHAndMin(timesMat)
       );
@@ -178,4 +188,8 @@ class TimeTracker {
     this.summaryOutput.fillWith("");
     this.distributedOutput.fillWith("");
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = TimeTracker;
 }

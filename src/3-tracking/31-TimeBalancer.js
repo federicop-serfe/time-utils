@@ -1,3 +1,7 @@
+if (typeof GeneralUtils === "undefined") {
+  GeneralUtils = require("../1-utils/13-GeneralUtils");
+}
+
 // Abstract class for strategy design pattern
 class TimeBalancer {
   // Input: ticketTimes = [{name, real, estimated}], totalWeekTime
@@ -158,4 +162,12 @@ class BestEffortBalancer extends TimeBalancer {
 
     return fakeTimes;
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    TimeBalancer,
+    LPBalancer,
+    BestEffortBalancer,
+  };
 }
