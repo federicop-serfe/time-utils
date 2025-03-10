@@ -39,122 +39,32 @@ class TimeTracker {
   }
 
   track() {
-    const getWeekWorkingDays = (days) => {
-      const weekWorkingDays = [];
-      days
-        .map((day) => day.toLowerCase())
-        .forEach((day) => {
-          if (!weekWorkingDays.find((d) => d === day)) {
-            weekWorkingDays.push(day[0].toUpperCase() + day.slice(1));
-          }
-        });
-      return weekWorkingDays;
-    };
-
-    const getTicketTimes = (tickets, estimatedTimes, startTimes, endTimes) => {
-      let ticketTimes = {};
-      let lastTicket, lastEstimate;
-
-      tickets.map((ticket, ticketIdx) => {
-        if (ticket.toLowerCase() !== this.PREVIOUS_TICKET_FLAG) {
-          lastTicket = ticket;
-          lastEstimate = estimatedTimes[ticketIdx];
-        }
-        if (!ticketTimes[lastTicket]) {
-          ticketTimes[lastTicket] = {
-            name: lastTicket,
-            real: 0,
-            estimated: lastEstimate,
-          };
-        }
-        ticketTimes[lastTicket].real +=
-          endTimes[ticketIdx] - startTimes[ticketIdx];
-      });
-
-      return Object.values(ticketTimes).map((ticket) => {
-        ticket.real = GeneralUtils.roundBetween(ticket.real, 0, 5);
-        return ticket;
-      });
-    };
-
-    const getSummaryOutput = (ticketTimes, fakeTimes) => {
-      const sum = (arr) => arr.reduce((acc, curr) => acc + curr);
-      const findFake = (ticket) =>
-        fakeTimes.find((t) => t.name === ticket.name).fake;
-
-      const namesMat = ticketTimes.map((ticket) => [ticket.name]);
-      const realTimesMat = ticketTimes.map((ticket) => [ticket.real]);
-      const fakeTimesMat = ticketTimes.map((ticket) => [findFake(ticket)]);
-      const totalTimesMat = ticketTimes.map((ticket) => [
-        ticket.real + findFake(ticket),
-      ]);
-
-      // Append total at the end
-      namesMat.push(["TOTAL"]);
-      realTimesMat.push([sum(ticketTimes.map((ticket) => ticket.real))]);
-      fakeTimesMat.push([sum(fakeTimes.map((ticket) => ticket.fake))]);
-      totalTimesMat.push([
-        sum(ticketTimes.map((ticket) => ticket.real + findFake(ticket))),
-      ]);
-
-      return GeneralUtils.concatMatricesHorizontally(
-        GeneralUtils.concatMatricesHorizontally(
-          GeneralUtils.concatMatricesHorizontally(
-            namesMat,
-            this.timeConverter.matrixToHAndMin(realTimesMat)
-          ),
-          this.timeConverter.matrixToHAndMin(fakeTimesMat)
-        ),
-        this.timeConverter.matrixToHAndMin(totalTimesMat)
-      );
-    };
-
-    const getDistributedOutput = (distributedTimes) => {
-      const namesDaysMat = distributedTimes.map((ticket) => [
-        ticket.name,
-        ticket.day,
-      ]);
-      const timesMat = distributedTimes.map((ticket) => [ticket.total]);
-
-      return GeneralUtils.concatMatricesHorizontally(
-        namesDaysMat,
-        this.timeConverter.matrixToHAndMin(timesMat)
-      );
-    };
-
-    // --------------------------------
-    // Retrieve data
     const { tickets, estimatedTimes, days, startTimes, endTimes } =
       this.getTrackingData();
 
-    // Simplify
-    const weekWorkingDays = getWeekWorkingDays(days);
-    const ticketTimes = getTicketTimes(
+    const weekWorkingDays = this.getWeekWorkingDays(days);
+    const ticketTimes = this.getTicketTimes(
       tickets,
       estimatedTimes,
       startTimes,
       endTimes
     );
 
-    // Optimize
     const totalWeekTime = weekWorkingDays.length * this.dayWorkingMinutes;
     const fakeTimes = this.timeBalancer.balance(ticketTimes, totalWeekTime);
 
     console.log("ticketTimes:", ticketTimes);
     console.log("fakeTimes:", fakeTimes);
 
-    // Distribute
     const distributedTimes = this.timeDistributer.distribute(
       ticketTimes,
       fakeTimes,
       weekWorkingDays
     );
 
-    // Summary output
-    this.summaryOutput.write(getSummaryOutput(ticketTimes, fakeTimes));
+    this.summaryOutput.write(this.getSummaryOutput(ticketTimes, fakeTimes));
 
-    // Distributed across days output
-    this.distributedOutput.write(getDistributedOutput(distributedTimes));
+    this.distributedOutput.write(this.getDistributedOutput(distributedTimes));
   }
 
   getTrackingData() {
@@ -187,6 +97,89 @@ class TimeTracker {
       startTimes,
       endTimes,
     };
+  }
+
+  getWeekWorkingDays(days) {
+    const weekWorkingDays = [];
+    days
+      .map((day) => day.toLowerCase())
+      .forEach((day) => {
+        if (!weekWorkingDays.find((d) => d === day)) {
+          weekWorkingDays.push(day[0].toUpperCase() + day.slice(1));
+        }
+      });
+    return weekWorkingDays;
+  }
+
+  getTicketTimes(tickets, estimatedTimes, startTimes, endTimes) {
+    let ticketTimes = {};
+    let lastTicket, lastEstimate;
+
+    tickets.map((ticket, ticketIdx) => {
+      if (ticket.toLowerCase() !== this.PREVIOUS_TICKET_FLAG) {
+        lastTicket = ticket;
+        lastEstimate = estimatedTimes[ticketIdx];
+      }
+      if (!ticketTimes[lastTicket]) {
+        ticketTimes[lastTicket] = {
+          name: lastTicket,
+          real: 0,
+          estimated: lastEstimate,
+        };
+      }
+      ticketTimes[lastTicket].real +=
+        endTimes[ticketIdx] - startTimes[ticketIdx];
+    });
+
+    return Object.values(ticketTimes).map((ticket) => {
+      ticket.real = GeneralUtils.roundBetween(ticket.real, 0, 5);
+      return ticket;
+    });
+  }
+
+  getSummaryOutput(ticketTimes, fakeTimes) {
+    const sum = (arr) => arr.reduce((acc, curr) => acc + curr);
+    const findFake = (ticket) =>
+      fakeTimes.find((t) => t.name === ticket.name).fake;
+
+    const namesMat = ticketTimes.map((ticket) => [ticket.name]);
+    const realTimesMat = ticketTimes.map((ticket) => [ticket.real]);
+    const fakeTimesMat = ticketTimes.map((ticket) => [findFake(ticket)]);
+    const totalTimesMat = ticketTimes.map((ticket) => [
+      ticket.real + findFake(ticket),
+    ]);
+
+    // Append total at the end
+    namesMat.push(["TOTAL"]);
+    realTimesMat.push([sum(ticketTimes.map((ticket) => ticket.real))]);
+    fakeTimesMat.push([sum(fakeTimes.map((ticket) => ticket.fake))]);
+    totalTimesMat.push([
+      sum(ticketTimes.map((ticket) => ticket.real + findFake(ticket))),
+    ]);
+
+    return GeneralUtils.concatMatricesHorizontally(
+      GeneralUtils.concatMatricesHorizontally(
+        GeneralUtils.concatMatricesHorizontally(
+          namesMat,
+          this.timeConverter.matrixToHAndMin(realTimesMat)
+        ),
+        this.timeConverter.matrixToHAndMin(fakeTimesMat)
+      ),
+      this.timeConverter.matrixToHAndMin(totalTimesMat)
+    );
+  }
+
+  getDistributedOutput(distributedTimes) {
+    const namesDaysMat = distributedTimes.map((ticket) => [
+      ticket.name,
+      ticket.day,
+    ]);
+    const timesMat = distributedTimes.map((ticket) => [ticket.total]);
+
+    return GeneralUtils.concatMatricesHorizontally(
+      namesDaysMat,
+      this.timeConverter.matrixToHAndMin(timesMat)
+    );
   }
 
   reset() {
