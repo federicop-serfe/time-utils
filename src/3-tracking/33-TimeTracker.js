@@ -39,15 +39,6 @@ class TimeTracker {
   }
 
   track() {
-    const cleanData = (data) =>
-      data.map((d) => d[0]).filter((d) => d.length > 0 || d > 0);
-
-    const cleanDataSpecial = (tickets, estimatedTimes) => {
-      return estimatedTimes
-        .map((e) => e[0])
-        .filter((e, eIdx) => e > 0 || tickets[eIdx]?.length > 0);
-    };
-
     const getWeekWorkingDays = (days) => {
       const weekWorkingDays = [];
       days
@@ -59,9 +50,6 @@ class TimeTracker {
         });
       return weekWorkingDays;
     };
-
-    const getTotalWeekTime = (weekWorkingDays) =>
-      weekWorkingDays.length * this.dayWorkingMinutes;
 
     const getTicketTimes = (tickets, estimatedTimes, startTimes, endTimes) => {
       let ticketTimes = {};
@@ -136,18 +124,8 @@ class TimeTracker {
 
     // --------------------------------
     // Retrieve data
-    const tickets = cleanData(this.ticketsInput.read());
-    const estimatedTimes = cleanDataSpecial(
-      tickets,
-      this.timeConverter.matrixToMin(this.estimatedTimesInput.read())
-    );
-    const days = cleanData(this.daysInput.read());
-    const startTimes = cleanData(
-      this.timeConverter.matrixToMin(this.startTimesInput.read())
-    );
-    const endTimes = cleanData(
-      this.timeConverter.matrixToMin(this.endTimesInput.read())
-    );
+    const { tickets, estimatedTimes, days, startTimes, endTimes } =
+      this.getTrackingData();
 
     // Simplify
     const weekWorkingDays = getWeekWorkingDays(days);
@@ -159,7 +137,7 @@ class TimeTracker {
     );
 
     // Optimize
-    const totalWeekTime = getTotalWeekTime(weekWorkingDays);
+    const totalWeekTime = weekWorkingDays.length * this.dayWorkingMinutes;
     const fakeTimes = this.timeBalancer.balance(ticketTimes, totalWeekTime);
 
     console.log("ticketTimes:", ticketTimes);
@@ -177,6 +155,38 @@ class TimeTracker {
 
     // Distributed across days output
     this.distributedOutput.write(getDistributedOutput(distributedTimes));
+  }
+
+  getTrackingData() {
+    const cleanData = (data) =>
+      data.map((d) => d[0]).filter((d) => d.length > 0 || d > 0);
+
+    const cleanDataSpecial = (tickets, estimatedTimes) => {
+      return estimatedTimes
+        .map((e) => e[0])
+        .filter((e, eIdx) => e > 0 || tickets[eIdx]?.length > 0);
+    };
+
+    const tickets = cleanData(this.ticketsInput.read());
+    const estimatedTimes = cleanDataSpecial(
+      tickets,
+      this.timeConverter.matrixToMin(this.estimatedTimesInput.read())
+    );
+    const days = cleanData(this.daysInput.read());
+    const startTimes = cleanData(
+      this.timeConverter.matrixToMin(this.startTimesInput.read())
+    );
+    const endTimes = cleanData(
+      this.timeConverter.matrixToMin(this.endTimesInput.read())
+    );
+
+    return {
+      tickets,
+      estimatedTimes,
+      days,
+      startTimes,
+      endTimes,
+    };
   }
 
   reset() {
