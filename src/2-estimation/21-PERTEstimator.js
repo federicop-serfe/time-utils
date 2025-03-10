@@ -1,8 +1,8 @@
 if (typeof TimeConverter === "undefined") {
   TimeConverter = require("../1-utils/11-TimeConverter");
 }
-if (typeof MatrixUtils === "undefined") {
-  MatrixUtils = require("../1-utils/13-MatrixUtils");
+if (typeof GeneralUtils === "undefined") {
+  GeneralUtils = require("../1-utils/13-GeneralUtils");
 }
 
 const ESTIMATION_REPORT_PARTS = [
@@ -49,7 +49,7 @@ class PERTEstimator {
       EE > 0 ? Math.round(((finalEstimation - EE) / EE) * 100) : 0;
 
     const estimations = this.timeConverter.matrixToHAndMin(
-      MatrixUtils.concatHorizontally(
+      GeneralUtils.concatMatricesHorizontally(
         [...subtasksEE.map((ee) => [ee]), [EE], [finalEstimation]],
         [...subtasksSD.map((sd) => [sd]), [SD], [0]]
       )

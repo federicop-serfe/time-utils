@@ -143,7 +143,6 @@ suite("SpreadsheetIOHandler", function () {
       rangeStub.getNumRows.returns(2);
       rangeStub.getNumColumns.returns(2);
 
-      debugger;
       handler.write([["v1"]], "A1:B2");
 
       assert(

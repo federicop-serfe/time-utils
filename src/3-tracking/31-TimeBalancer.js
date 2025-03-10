@@ -102,6 +102,12 @@ class LPBalancer extends TimeBalancer {
     to look good on paper.
   */
 class BestEffortBalancer extends TimeBalancer {
+  // maxDiscount: proportion of the real time that can be substracted by the fake time; 0 <= maxDiscount <= infinity
+  constructor(maxDiscount) {
+    super();
+    this.maxDiscount = maxDiscount;
+  }
+
   balance(ticketTimes, totalWeekTime) {
     const sum = (arr, atr) =>
       arr.map((ai) => ai[atr]).reduce((acc, curr) => acc + curr);
@@ -119,10 +125,14 @@ class BestEffortBalancer extends TimeBalancer {
     if (timeTofill > 0) {
       remaindingToFill = timeTofill;
       sortedTicketTimes.forEach((ticket) => {
-        remaindingToFill -= ticket.estimated - ticket.real;
+        const ticketFake = Math.max(
+          ticket.estimated - ticket.real,
+          -this.maxDiscount * ticket.real
+        );
+        remaindingToFill -= ticketFake; //ticket.estimated - ticket.real;
         fakeTimes.push({
           name: ticket.name,
-          fake: ticket.estimated - ticket.real,
+          fake: ticketFake, //ticket.estimated - ticket.real,
         });
       });
 
@@ -141,6 +151,10 @@ class BestEffortBalancer extends TimeBalancer {
         });
       });
     }
+
+    fakeTimes.forEach((ticket) => {
+      ticket.fake = GeneralUtils.roundBetween(ticket.fake, 0, 5);
+    });
 
     return fakeTimes;
   }

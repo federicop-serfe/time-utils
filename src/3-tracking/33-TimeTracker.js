@@ -20,8 +20,8 @@ class TimeTracker {
 
     this.timeConverter = new TimeConverter();
     this.dayWorkingMinutes = 60 * 8;
-    this.timeBalancer = new BestEffortBalancer();
-    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer());
+    this.timeBalancer = new BestEffortBalancer(0.33);
+    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.33));
     this.timeDistributer = new TimeDistributer(this.dayWorkingMinutes);
   }
 
@@ -69,7 +69,11 @@ class TimeTracker {
         ticketTimes[lastTicket].real +=
           endTimes[ticketIdx] - startTimes[ticketIdx];
       });
-      return Object.values(ticketTimes);
+
+      return Object.values(ticketTimes).map((ticket) => {
+        ticket.real = GeneralUtils.roundBetween(ticket.real, 0, 5);
+        return ticket;
+      });
     };
 
     const concatMatricesHorizontally = (A, B) =>
