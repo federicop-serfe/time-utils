@@ -21,6 +21,7 @@ class GeneralUtils {
     const remainder = num % scale;
 
     const multiples = Math.round((remainder - lower) / delta);
+    //const multiples = Math.ceil((remainder - lower) / delta);
     const nearest = lower + multiples * delta;
     return base + nearest;
   }
