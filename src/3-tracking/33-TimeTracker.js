@@ -33,7 +33,7 @@ class TimeTracker {
 
     this.timeConverter = new TimeConverter();
     this.dayWorkingMinutes = 60 * 8;
-    this.timeBalancer = new BestEffortBalancer(0.15);
+    this.timeBalancer = new BestEffortBalancer(0.75);
     //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.15));
     this.timeDistributer = new TimeDistributer(this.dayWorkingMinutes);
   }
@@ -131,6 +131,7 @@ class TimeTracker {
         endTimes[ticketIdx] - startTimes[ticketIdx];
     });
 
+    // TODO: refactor rounding out to output
     return Object.values(ticketTimes).map((ticket) => {
       ticket.real = GeneralUtils.roundBetween(ticket.real, 0, 5);
       return ticket;

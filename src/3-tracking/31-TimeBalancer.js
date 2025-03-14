@@ -106,10 +106,10 @@ class LPBalancer extends TimeBalancer {
     to look good on paper.
   */
 class BestEffortBalancer extends TimeBalancer {
-  // maxDiscount: proportion of the real time that can be substracted by the fake time; 0 <= maxDiscount <= infinity
-  constructor(maxDiscount) {
+  // 0 <= deviatedTicketPenalizationFactor <= 1: controls how much time substraction takes place for deviated tasks (0: none, 1: 2E - R, >1: not recommended)
+  constructor(deviatedTicketPenalizationFactor) {
     super();
-    this.maxDiscount = maxDiscount;
+    this.deviatedTicketPenalizationFactor = deviatedTicketPenalizationFactor;
   }
 
   balance(ticketTimes, totalWeekTime) {
@@ -117,33 +117,39 @@ class BestEffortBalancer extends TimeBalancer {
       arr.map((ai) => ai[atr]).reduce((acc, curr) => acc + curr);
 
     const fakeTimes = [];
-    const realSum = sum(ticketTimes, "real");
-    const estimatedSum = sum(ticketTimes, "estimated");
+    //const fillingWeights = ticketTimes.map((ticket) => ({ name: ticket.name, weight: ticket.estimated }));
+    const fillingWeights = ticketTimes.reduce((acc, ticket) => {
+      acc[ticket.name] = ticket.estimated;
+      return acc;
+    }, {});
     const sortedTicketTimes = [...ticketTimes].sort(
       (a, b) => b.estimated - a.estimated
     );
-    const timeTofill = totalWeekTime - realSum;
+    const timeTofill = totalWeekTime - sum(ticketTimes, "real");
     let remaindingToFill;
 
     // i.e. times need to be filled
     if (timeTofill > 0) {
       remaindingToFill = timeTofill;
       sortedTicketTimes.forEach((ticket) => {
-        const ticketFake = Math.max(
-          ticket.estimated - ticket.real,
-          -this.maxDiscount * ticket.real
-        );
-        remaindingToFill -= ticketFake; //ticket.estimated - ticket.real;
+        remaindingToFill -= ticket.estimated - ticket.real;
+        fillingWeights[ticket.name] -=
+          this.deviatedTicketPenalizationFactor *
+          Math.min(ticket.estimated - ticket.real, 0);
         fakeTimes.push({
           name: ticket.name,
-          fake: ticketFake, //ticket.estimated - ticket.real,
+          fake: ticket.estimated - ticket.real,
         });
       });
 
+      const weightSum = Object.values(fillingWeights).reduce(
+        (acc, curr) => acc + curr,
+        0
+      );
       if (remaindingToFill > 0) {
         sortedTicketTimes.forEach((ticket) => {
           fakeTimes.find((t) => t.name === ticket.name).fake += Math.ceil(
-            (remaindingToFill * ticket.estimated) / estimatedSum
+            (remaindingToFill * fillingWeights[ticket.name]) / weightSum
           );
         });
       }
@@ -156,9 +162,11 @@ class BestEffortBalancer extends TimeBalancer {
       });
     }
 
-    fakeTimes.forEach((ticket) => {
-      ticket.fake = GeneralUtils.roundBetween(ticket.fake, 0, 5);
-    });
+    // TODO: refactor to final output
+    // TODO: fix rounding for negative numbers
+    //fakeTimes.forEach((ticket) => {
+    //  ticket.fake = GeneralUtils.roundBetween(ticket.fake, 0, 5);
+    //});
 
     return fakeTimes;
   }
