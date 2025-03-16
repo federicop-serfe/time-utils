@@ -12,18 +12,17 @@ class GeneralUtils {
     return A.map((row, idx) => row.concat(B[idx]));
   }
 
-  static roundBetween(num, lower = 0, upper = 5) {
+  static round(num, lower = 0, upper = 5) {
     const delta = upper - lower;
     const digits = delta.toString().length;
     const scale = 10 ** digits;
 
-    const base = scale * Math.floor(num / scale);
-    const remainder = num % scale;
+    const base = scale * Math.floor(Math.abs(num) / scale);
+    const remainder = Math.abs(num) % scale;
 
     const multiples = Math.round((remainder - lower) / delta);
-    //const multiples = Math.ceil((remainder - lower) / delta);
     const nearest = lower + multiples * delta;
-    return base + nearest;
+    return Math.sign(num) * (base + nearest);
   }
 }
 

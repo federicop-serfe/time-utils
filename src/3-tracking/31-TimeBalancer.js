@@ -162,12 +162,6 @@ class BestEffortBalancer extends TimeBalancer {
       });
     }
 
-    // TODO: refactor to final output
-    // TODO: fix rounding for negative numbers
-    //fakeTimes.forEach((ticket) => {
-    //  ticket.fake = GeneralUtils.roundBetween(ticket.fake, 0, 5);
-    //});
-
     return fakeTimes;
   }
 }

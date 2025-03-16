@@ -33,8 +33,8 @@ class TimeTracker {
 
     this.timeConverter = new TimeConverter();
     this.dayWorkingMinutes = 60 * 8;
-    this.timeBalancer = new BestEffortBalancer(0.75);
-    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.15));
+    this.timeBalancer = new BestEffortBalancer(0.8);
+    //this.timeBalancer = new LPBalancer(0.75, 0.25, new BestEffortBalancer(0.8));
     this.timeDistributer = new TimeDistributer(this.dayWorkingMinutes);
   }
 
@@ -131,11 +131,7 @@ class TimeTracker {
         endTimes[ticketIdx] - startTimes[ticketIdx];
     });
 
-    // TODO: refactor rounding out to output
-    return Object.values(ticketTimes).map((ticket) => {
-      ticket.real = GeneralUtils.roundBetween(ticket.real, 0, 5);
-      return ticket;
-    });
+    return Object.values(ticketTimes);
   }
 
   getSummaryOutput(ticketTimes, fakeTimes) {
@@ -144,18 +140,23 @@ class TimeTracker {
       fakeTimes.find((t) => t.name === ticket.name).fake;
 
     const namesMat = ticketTimes.map((ticket) => [ticket.name]);
-    const realTimesMat = ticketTimes.map((ticket) => [ticket.real]);
-    const fakeTimesMat = ticketTimes.map((ticket) => [findFake(ticket)]);
-    const totalTimesMat = ticketTimes.map((ticket) => [
-      ticket.real + findFake(ticket),
+    const realTimesMat = ticketTimes.map((ticket) => [
+      GeneralUtils.round(ticket.real),
+    ]);
+    const fakeTimesMat = ticketTimes.map((ticket) => [
+      GeneralUtils.round(findFake(ticket)),
+    ]);
+    const totalTimesMat = realTimesMat.map((realRow, idx) => [
+      realRow[0] + fakeTimesMat[idx][0],
     ]);
 
     // Append total at the end
     namesMat.push(["TOTAL"]);
-    realTimesMat.push([sum(ticketTimes.map((ticket) => ticket.real))]);
-    fakeTimesMat.push([sum(fakeTimes.map((ticket) => ticket.fake))]);
+    realTimesMat.push([sum(realTimesMat.map((realRow) => realRow[0]))]);
+    fakeTimesMat.push([sum(fakeTimesMat.map((fakeRow) => fakeRow[0]))]);
     totalTimesMat.push([
-      sum(ticketTimes.map((ticket) => ticket.real + findFake(ticket))),
+      realTimesMat[realTimesMat.length - 1][0] +
+        fakeTimesMat[fakeTimesMat.length - 1][0],
     ]);
 
     return GeneralUtils.concatMatricesHorizontally(
@@ -175,7 +176,9 @@ class TimeTracker {
       ticket.name,
       ticket.day,
     ]);
-    const timesMat = distributedTimes.map((ticket) => [ticket.total]);
+    const timesMat = distributedTimes.map((ticket) => [
+      GeneralUtils.round(ticket.total),
+    ]);
 
     return GeneralUtils.concatMatricesHorizontally(
       namesDaysMat,
