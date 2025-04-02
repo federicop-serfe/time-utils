@@ -39,8 +39,17 @@ class TimeTracker {
   }
 
   track() {
-    const { tickets, estimatedTimes, days, startTimes, endTimes } =
-      this.getTrackingData();
+    const tickets = this.ticketsInput.read().flat();
+    const estimatedTimes = this.timeConverter
+      .matrixToMin(this.estimatedTimesInput.read(undefined, tickets.length))
+      .flat();
+    const days = this.daysInput.read(undefined, tickets.length).flat();
+    const startTimes = this.timeConverter
+      .matrixToMin(this.startTimesInput.read(undefined, tickets.length))
+      .flat();
+    const endTimes = this.timeConverter
+      .matrixToMin(this.endTimesInput.read(undefined, tickets.length))
+      .flat();
 
     const weekWorkingDays = this.getWeekWorkingDays(days);
     const ticketTimes = this.getTicketTimes(
@@ -63,48 +72,16 @@ class TimeTracker {
     );
 
     this.summaryOutput.write(this.getSummaryOutput(ticketTimes, fakeTimes));
-
     this.distributedOutput.write(this.getDistributedOutput(distributedTimes));
-  }
-
-  getTrackingData() {
-    const cleanData = (data) =>
-      data.map((d) => d[0]).filter((d) => d.length > 0 || d > 0);
-
-    const cleanDataSpecial = (tickets, estimatedTimes) => {
-      return estimatedTimes
-        .map((e) => e[0])
-        .filter((e, eIdx) => e > 0 || tickets[eIdx]?.length > 0);
-    };
-
-    const tickets = cleanData(this.ticketsInput.read());
-    const estimatedTimes = cleanDataSpecial(
-      tickets,
-      this.timeConverter.matrixToMin(this.estimatedTimesInput.read())
-    );
-    const days = cleanData(this.daysInput.read());
-    const startTimes = cleanData(
-      this.timeConverter.matrixToMin(this.startTimesInput.read())
-    );
-    const endTimes = cleanData(
-      this.timeConverter.matrixToMin(this.endTimesInput.read())
-    );
-
-    return {
-      tickets,
-      estimatedTimes,
-      days,
-      startTimes,
-      endTimes,
-    };
   }
 
   getWeekWorkingDays(days) {
     const weekWorkingDays = [];
     days
+      .filter((day) => !!day)
       .map((day) => day.toLowerCase())
       .forEach((day) => {
-        if (!weekWorkingDays.find((d) => d === day)) {
+        if (!weekWorkingDays.find((d) => d.toLowerCase() === day)) {
           weekWorkingDays.push(day[0].toUpperCase() + day.slice(1));
         }
       });

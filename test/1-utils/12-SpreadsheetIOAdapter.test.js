@@ -70,7 +70,7 @@ suite("SpreadsheetIOAdapter", function () {
       restore();
     });
 
-    test("reads value when cell", function () {
+    test("reads value when it's a cell", function () {
       rangeStub.getValue.returns("someValue");
 
       const result = IOAdapter.read("A1");
@@ -79,7 +79,7 @@ suite("SpreadsheetIOAdapter", function () {
       assert.strictEqual(result, "someValue");
     });
 
-    test("reads array of values when range", function () {
+    test("reads array of values when it's a range", function () {
       rangeStub.getValues.returns([["v1", "v2"]]);
 
       const result = IOAdapter.read("A1:B1");
@@ -91,6 +91,25 @@ suite("SpreadsheetIOAdapter", function () {
     test("throws on read error", function () {
       sheetStub.getRange = stub().throws(new Error("Some error"));
       assert.throws(() => IOAdapter.read(), /Error reading reference/);
+    });
+
+    test("truncates empty data, accounting for minimum rows and cols", function () {
+      rangeStub.getValues.returns([
+        ["v1", "v2", "", "", ""],
+        ["v3", "v4", "v5", "", ""],
+        ["v6", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+      ]);
+
+      const result = IOAdapter.read("A1:B4", 4, 4);
+
+      assert.deepEqual(result, [
+        ["v1", "v2", "", ""],
+        ["v3", "v4", "v5", ""],
+        ["v6", "", "", ""],
+        ["", "", "", ""],
+      ]);
     });
   });
 

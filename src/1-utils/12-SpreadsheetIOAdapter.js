@@ -15,14 +15,43 @@ class SpreadsheetIOAdapter {
     }
   }
 
-  read(reference) {
+  read(reference, minRows, minCols) {
     const ref = reference || this.defaultReference;
+    let values;
     try {
       const range = this.sheet.getRange(ref);
-      return this.isCell(ref) ? range.getValue() : range.getValues();
+      if (this.isCell(ref)) return range.getValue();
+      values = range.getValues();
     } catch (error) {
       throw new Error(`Error reading reference "${ref}": ${error.message}`);
     }
+
+    // Remove empty rows and columns
+    const hasData = (matrix) =>
+      matrix.reduce(
+        (hasData, row) =>
+          hasData || row.some((value) => value.length > 0 || value > 0),
+        false
+      );
+    if (values.length > 0 && values[0].length > 0) {
+      let i, rows;
+      for (i = 0; i < values.length; i++) {
+        rows = values.slice(i);
+        if (i > (minRows - 1 || 0) && !hasData(rows)) {
+          values = values.slice(0, i);
+        }
+      }
+
+      let j, cols;
+      for (j = 0; j < values[0].length; j++) {
+        cols = values.map((row) => row.slice(j));
+        if (j > (minCols - 1 || 0) && !hasData(cols)) {
+          values = values.map((row) => row.slice(0, j));
+        }
+      }
+    }
+
+    return values;
   }
 
   write(data, reference) {
@@ -49,6 +78,7 @@ class SpreadsheetIOAdapter {
           finalData = data[0];
         }
       } else {
+        // Fill with the single value
         finalData = data;
       }
     } else {
