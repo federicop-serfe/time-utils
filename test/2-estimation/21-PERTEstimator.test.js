@@ -44,7 +44,7 @@ suite("PERTEstimator", function () {
 
       estimator.estimate();
 
-      /* Calculated by hand with formulas from: https://en.wikipedia.org/wiki/Three-point_estimation
+      /* Calculated by hand (accounting for rouding) with formulas from: https://en.wikipedia.org/wiki/Three-point_estimation
         Format:
             [EE(Analysis), SD(analysis)]
             [EE(Design/Implementation), SD(Design/Implementation)]
@@ -56,8 +56,8 @@ suite("PERTEstimator", function () {
         [2, 15, 0, 25],
         [5, 10, 0, 15],
         [8, 35, 0, 15],
-        [16, 0, 0, 33],
-        [17, 6, 0, 0],
+        [16, 0, 0, 35],
+        [17, 10, 0, 0],
       ]);
     });
 

@@ -35,22 +35,25 @@ class PERTEstimator {
     );
 
     // timeArr: [bestCase, mostLikely, worstCase]
-    const subtasksEE = guesses.map(
-      (timeArr) => (timeArr[0] + 4 * timeArr[1] + timeArr[2]) / 6
+    const subtasksEE = guesses.map((timeArr) =>
+      GeneralUtils.round((timeArr[0] + 4 * timeArr[1] + timeArr[2]) / 6)
     );
-    const subtasksSD = guesses.map((timeArr) => (timeArr[2] - timeArr[0]) / 6);
+    const subtasksSD = guesses.map((timeArr) =>
+      GeneralUtils.round((timeArr[2] - timeArr[0]) / 6)
+    );
 
-    const EE = subtasksEE.reduce((acc, curr) => acc + curr);
-    const SD = Math.sqrt(
-      subtasksSD.map((sd) => sd * sd).reduce((acc, curr) => acc + curr)
+    const EE = GeneralUtils.round(subtasksEE.reduce((acc, curr) => acc + curr));
+    const SD = GeneralUtils.round(
+      Math.sqrt(
+        subtasksSD.map((sd) => sd * sd).reduce((acc, curr) => acc + curr)
+      )
     );
-    const finalEstimation = EE + this.risk * SD;
-    const percentualRisk =
-      EE > 0 ? Math.round(((finalEstimation - EE) / EE) * 100) : 0;
+    const E = GeneralUtils.round(EE + this.risk * SD);
+    const percentualRisk = EE > 0 ? Math.round(((E - EE) / EE) * 100) : 0;
 
     const estimations = this.timeConverter.matrixToHAndMin(
       GeneralUtils.concatMatricesHorizontally(
-        [...subtasksEE.map((ee) => [ee]), [EE], [finalEstimation]],
+        [...subtasksEE.map((ee) => [ee]), [EE], [E]],
         [...subtasksSD.map((sd) => [sd]), [SD], [0]]
       )
     );
