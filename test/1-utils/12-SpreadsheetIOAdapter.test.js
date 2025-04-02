@@ -1,11 +1,11 @@
 const { suite, test, setup, teardown } = require("mocha");
 const { assert } = require("chai");
 const { stub, restore } = require("sinon");
-const SpreadsheetIOHandler = require("../../src/1-utils/12-SpreadsheetIOHandler");
+const SpreadsheetIOAdapter = require("../../src/1-utils/12-SpreadsheetIOAdapter");
 
 global.SpreadsheetApp = { getActiveSpreadsheet: () => {} };
 
-suite("SpreadsheetIOHandler", function () {
+suite("SpreadsheetIOAdapter", function () {
   let spreadsheetStub, rangeStub, sheetStub;
 
   setup(function () {
@@ -31,7 +31,7 @@ suite("SpreadsheetIOHandler", function () {
 
     test("throws if no sheet name", function () {
       assert.throws(
-        () => new SpreadsheetIOHandler(),
+        () => new SpreadsheetIOAdapter(),
         /Sheet name not provided/
       );
     });
@@ -39,7 +39,7 @@ suite("SpreadsheetIOHandler", function () {
     test("throws if sheet not found", function () {
       spreadsheetStub.getSheetByName.returns(null);
       assert.throws(
-        () => new SpreadsheetIOHandler("UnknownSheet", "A1"),
+        () => new SpreadsheetIOAdapter("UnknownSheet", "A1"),
         'Sheet "UnknownSheet" not found'
       );
     });
@@ -47,23 +47,23 @@ suite("SpreadsheetIOHandler", function () {
     test("throws if invalid default reference", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
       assert.throws(
-        () => new SpreadsheetIOHandler("Sheet1", "InvalidRef"),
+        () => new SpreadsheetIOAdapter("Sheet1", "InvalidRef"),
         /Invalid reference/
       );
     });
 
     test("constructs with valid params", function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
-      assert.doesNotThrow(() => new SpreadsheetIOHandler("Sheet1", "A1"));
+      assert.doesNotThrow(() => new SpreadsheetIOAdapter("Sheet1", "A1"));
     });
   });
 
   suite("read", function () {
-    let handler;
+    let IOAdapter;
 
     setup(function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
-      handler = new SpreadsheetIOHandler("Sheet1");
+      IOAdapter = new SpreadsheetIOAdapter("Sheet1");
     });
 
     teardown(function () {
@@ -73,7 +73,7 @@ suite("SpreadsheetIOHandler", function () {
     test("reads value when cell", function () {
       rangeStub.getValue.returns("someValue");
 
-      const result = handler.read("A1");
+      const result = IOAdapter.read("A1");
 
       assert(rangeStub.getValue.calledOnce);
       assert.strictEqual(result, "someValue");
@@ -82,7 +82,7 @@ suite("SpreadsheetIOHandler", function () {
     test("reads array of values when range", function () {
       rangeStub.getValues.returns([["v1", "v2"]]);
 
-      const result = handler.read("A1:B1");
+      const result = IOAdapter.read("A1:B1");
 
       assert(rangeStub.getValues.calledOnce);
       assert.deepEqual(result, [["v1", "v2"]]);
@@ -90,16 +90,16 @@ suite("SpreadsheetIOHandler", function () {
 
     test("throws on read error", function () {
       sheetStub.getRange = stub().throws(new Error("Some error"));
-      assert.throws(() => handler.read(), /Error reading reference/);
+      assert.throws(() => IOAdapter.read(), /Error reading reference/);
     });
   });
 
   suite("write", function () {
-    let handler;
+    let IOAdapter;
 
     setup(function () {
       spreadsheetStub.getSheetByName.returns(sheetStub);
-      handler = new SpreadsheetIOHandler("Sheet1");
+      IOAdapter = new SpreadsheetIOAdapter("Sheet1");
     });
 
     teardown(function () {
@@ -107,19 +107,19 @@ suite("SpreadsheetIOHandler", function () {
     });
 
     test("writes single value to cell", function () {
-      handler.write("newValue", "A1");
+      IOAdapter.write("newValue", "A1");
 
       assert(rangeStub.setValue.calledOnceWith("newValue"));
     });
 
     test("writes array to cell (takes first element)", function () {
-      handler.write(["val1", "val2"], "A1");
+      IOAdapter.write(["val1", "val2"], "A1");
 
       assert(rangeStub.setValue.calledOnceWith("val1"));
     });
 
     test("writes matrix to cell (takes first element of first row)", function () {
-      handler.write(
+      IOAdapter.write(
         [
           ["val1", "val2"],
           ["val3", "val4"],
@@ -134,7 +134,7 @@ suite("SpreadsheetIOHandler", function () {
       rangeStub.getNumRows.returns(1);
       rangeStub.getNumColumns.returns(2);
 
-      handler.write([["v1", "v2"]], "A1:B1");
+      IOAdapter.write([["v1", "v2"]], "A1:B1");
 
       assert(rangeStub.setValues.calledOnceWith([["v1", "v2"]]));
     });
@@ -143,7 +143,7 @@ suite("SpreadsheetIOHandler", function () {
       rangeStub.getNumRows.returns(2);
       rangeStub.getNumColumns.returns(2);
 
-      handler.write([["v1"]], "A1:B2");
+      IOAdapter.write([["v1"]], "A1:B2");
 
       assert(
         rangeStub.setValues.calledOnceWith([
@@ -157,7 +157,7 @@ suite("SpreadsheetIOHandler", function () {
       rangeStub.getNumRows.returns(2);
       rangeStub.getNumColumns.returns(2);
 
-      handler.write(
+      IOAdapter.write(
         [
           ["v1", "v2", "v3"],
           ["v4", "v5", "v6"],
@@ -174,51 +174,32 @@ suite("SpreadsheetIOHandler", function () {
       );
     });
 
+    test("writes single value to range", function () {
+      rangeStub.getNumRows.returns(2);
+      rangeStub.getNumColumns.returns(2);
+
+      IOAdapter.write("v1", "A1:B2");
+
+      assert(
+        rangeStub.setValues.calledOnceWith([
+          ["v1", "v1"],
+          ["v1", "v1"],
+        ])
+      );
+    });
+
     test("throws if no data", function () {
-      assert.throws(() => handler.write(undefined, "A1"), /Data not provided/);
+      assert.throws(
+        () => IOAdapter.write(undefined, "A1"),
+        /Data not provided/
+      );
     });
 
     test("throws on write error", function () {
       rangeStub.setValue.throws(new Error("Write error"));
       assert.throws(
-        () => handler.write("data", "A1"),
+        () => IOAdapter.write("data", "A1"),
         /Error writing to reference/
-      );
-    });
-  });
-
-  suite("fillWith", function () {
-    let handler;
-
-    setup(function () {
-      spreadsheetStub.getSheetByName.returns(sheetStub);
-      handler = new SpreadsheetIOHandler("Sheet1");
-    });
-
-    teardown(function () {
-      restore();
-    });
-
-    test("throws if value is an array", function () {
-      assert.throws(
-        () => handler.fillWith(["value"], "A1:B2"),
-        /Must provide a single value to fill with/
-      );
-    });
-
-    test("fills range with specified value", function () {
-      rangeStub.getValues.returns([
-        ["old1", "old2"],
-        ["old3", "old4"],
-      ]);
-
-      handler.fillWith("test", "A1:B2");
-
-      assert(
-        rangeStub.setValues.calledOnceWith([
-          ["test", "test"],
-          ["test", "test"],
-        ])
       );
     });
   });

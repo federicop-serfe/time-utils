@@ -11,15 +11,12 @@ suite("PERTEstimator", function () {
     guessesInput = {
       read: stub(),
       write: spy(),
-      fillWith: spy(),
     };
     estimationsOutput = {
       write: stub(),
-      fillWith: spy(),
     };
     reportOutput = {
       write: spy(),
-      fillWith: spy(),
     };
     estimator = new PERTEstimator(
       risk,
@@ -86,9 +83,9 @@ suite("PERTEstimator", function () {
     test("resets guesses, estimations and report", function () {
       estimator.reset();
 
-      assert(estimationsOutput.fillWith.calledOnce);
-      assert(reportOutput.fillWith.calledOnce);
-      assert(guessesInput.fillWith.calledOnce);
+      assert.isTrue(guessesInput.write.calledOnceWith(0));
+      assert.isTrue(estimationsOutput.write.calledOnceWith(0));
+      assert.isTrue(reportOutput.write.calledOnceWith(""));
     });
   });
 });

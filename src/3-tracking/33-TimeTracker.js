@@ -187,13 +187,13 @@ class TimeTracker {
   }
 
   reset() {
-    this.ticketsInput.fillWith("");
-    this.estimatedTimesInput.fillWith("");
-    this.daysInput.fillWith("");
-    this.startTimesInput.fillWith("");
-    this.endTimesInput.fillWith("");
-    this.summaryOutput.fillWith("");
-    this.distributedOutput.fillWith("");
+    this.ticketsInput.write("");
+    this.estimatedTimesInput.write("");
+    this.daysInput.write("");
+    this.startTimesInput.write("");
+    this.endTimesInput.write("");
+    this.summaryOutput.write("");
+    this.distributedOutput.write("");
   }
 }
 

@@ -1,4 +1,4 @@
-class SpreadsheetIOHandler {
+class SpreadsheetIOAdapter {
   constructor(sheetName, defaultReference = undefined) {
     if (!sheetName) {
       throw new Error("Sheet name not provided");
@@ -27,7 +27,7 @@ class SpreadsheetIOHandler {
 
   write(data, reference) {
     const ref = reference || this.defaultReference;
-    if (!data) {
+    if (typeof data === "undefined" || data === null) {
       throw new Error("Data not provided");
     }
 
@@ -42,8 +42,10 @@ class SpreadsheetIOHandler {
     if (this.isCell(ref)) {
       if (Array.isArray(data)) {
         if (Array.isArray(data[0])) {
+          // Fill with the upper-left value of the matrix
           finalData = data[0][0];
         } else {
+          // Fill with the first value of the array
           finalData = data[0];
         }
       } else {
@@ -51,33 +53,43 @@ class SpreadsheetIOHandler {
       }
     } else {
       if (!Array.isArray(data) || !Array.isArray(data[0])) {
-        throw new Error("Data must be a matrix for range references");
-      }
-      if (
-        data.length < range.getNumRows() ||
-        data[0].length < range.getNumColumns()
-      ) {
-        // Fill remaining space
+        // Fill the range with the single value
         finalData = [];
         let row;
         for (let i = 0; i < range.getNumRows(); i++) {
           row = [];
-          for (let j = data[i]?.length || 0; j < range.getNumColumns(); j++) {
-            row.push("");
+          for (let j = 0; j < range.getNumColumns(); j++) {
+            row.push(data);
           }
-          finalData.push([...(data[i] ? data[i] : []), ...row]);
+          finalData.push(row);
         }
-      } else if (
-        data.length > range.getNumRows() ||
-        data[0].length > range.getNumColumns()
-      ) {
-        // Truncate data
-        finalData = data
-          .slice(0, range.getNumRows())
-          .map((row) => row.slice(0, range.getNumColumns()));
       } else {
-        // Use data as is
-        finalData = data;
+        if (
+          data.length < range.getNumRows() ||
+          data[0].length < range.getNumColumns()
+        ) {
+          // Fill remaining space
+          finalData = [];
+          let row;
+          for (let i = 0; i < range.getNumRows(); i++) {
+            row = [];
+            for (let j = data[i]?.length || 0; j < range.getNumColumns(); j++) {
+              row.push("");
+            }
+            finalData.push([...(data[i] ? data[i] : []), ...row]);
+          }
+        } else if (
+          data.length > range.getNumRows() ||
+          data[0].length > range.getNumColumns()
+        ) {
+          // Truncate data
+          finalData = data
+            .slice(0, range.getNumRows())
+            .map((row) => row.slice(0, range.getNumColumns()));
+        } else {
+          // Use data as is
+          finalData = data;
+        }
       }
     }
 
@@ -88,23 +100,14 @@ class SpreadsheetIOHandler {
     }
   }
 
-  fillWith(value, reference) {
-    const ref = reference || this.defaultReference;
-
-    if (Array.isArray(value)) {
-      throw new Error("Must provide a single value to fill with");
-    }
-
-    const newValues = this.read(ref).map((row) => row.map(() => value));
-    this.write(newValues, ref);
-  }
-
+  // Private
   isCell(reference) {
     const ref = reference || this.defaultReference;
     const cellRegex = /^[A-Z]+[0-9]+$/;
     return cellRegex.test(ref);
   }
 
+  // Private
   isRange(reference) {
     const ref = reference || this.defaultReference;
     const rangeRegex = /^[A-Z]+[0-9]+:[A-Z]+[0-9]+$/;
@@ -120,5 +123,5 @@ class SpreadsheetIOHandler {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = SpreadsheetIOHandler;
+  module.exports = SpreadsheetIOAdapter;
 }

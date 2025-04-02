@@ -66,9 +66,9 @@ class PERTEstimator {
   }
 
   reset() {
-    this.guessesInput.fillWith(0);
-    this.estimationsOutput.fillWith(0);
-    this.reportOutput.fillWith("");
+    this.guessesInput.write(0);
+    this.estimationsOutput.write(0);
+    this.reportOutput.write("");
   }
 }
 

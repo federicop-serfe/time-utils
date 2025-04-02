@@ -28,7 +28,6 @@ suite("BestEffortTimeBalancer", function () {
       ];
       totalWeekTime = 8 * 60;
 
-      debugger;
       const fakeTimes = balancer.balance(tickets, totalWeekTime);
 
       const timesSumTotalWeekTime =

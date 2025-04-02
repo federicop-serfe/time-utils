@@ -16,12 +16,10 @@
   },
   "homepage": "https://github.com/federicop-serfe/time-utils#readme",
   "devDependencies": {
-    "@stryker-mutator/mocha-runner": "^8.7.1",
     "chai": "4.5",
     "faker": "^5.5.3",
     "mocha": "^11.1.0",
     "nyc": "^17.1.0",
-    "sinon": "^19.0.2",
-    "stryker-cli": "^1.0.2"
+    "sinon": "^19.0.2"
   }
 }
