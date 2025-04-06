@@ -1,7 +1,6 @@
 const { assert } = require("chai");
-const { stub, spy, restore } = require("sinon");
+const { restore } = require("sinon");
 const { suite, test, setup, teardown } = require("mocha");
-const PERTEstimator = require("../../src/2-estimation/21-PERTEstimator");
 const { BestEffortBalancer } = require("../../src/3-tracking/31-TimeBalancer");
 
 suite("BestEffortTimeBalancer", function () {

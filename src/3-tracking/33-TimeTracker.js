@@ -90,22 +90,42 @@ class TimeTracker {
 
   getTicketTimes(tickets, estimatedTimes, startTimes, endTimes) {
     let ticketTimes = {};
-    let lastTicket, lastEstimate;
+    let lastTicket, startTime, endTime;
 
     tickets.map((ticket, ticketIdx) => {
-      if (ticket.toLowerCase() !== this.PREVIOUS_TICKET_FLAG) {
-        lastTicket = ticket;
-        lastEstimate = estimatedTimes[ticketIdx];
-      }
+      if (
+        ticket.length > 0 &&
+        ticket.toLowerCase() !== this.PREVIOUS_TICKET_FLAG
+      )
+        lastTicket = ticket.toLowerCase();
+
+      if (!lastTicket) throw new Error("No last ticket available");
+
       if (!ticketTimes[lastTicket]) {
         ticketTimes[lastTicket] = {
           name: lastTicket,
           real: 0,
-          estimated: lastEstimate,
+          estimated: 0,
         };
       }
-      ticketTimes[lastTicket].real +=
-        endTimes[ticketIdx] - startTimes[ticketIdx];
+
+      if (estimatedTimes[ticketIdx] > 0)
+        ticketTimes[lastTicket].estimated = estimatedTimes[ticketIdx];
+
+      startTime = startTimes[ticketIdx];
+      // If there isn't an end time for the ticket, set it to start time of
+      // the next ticket, unless there's no data available
+      if (endTimes[ticketIdx] > 0) {
+        endTime = endTimes[ticketIdx];
+      } else if (startTimes[ticketIdx + 1] > 0) {
+        endTime = startTimes[ticketIdx + 1];
+      } else throw new Error(`No end time available for ticket: ${lastTicket}`);
+      if (startTime <= endTime)
+        ticketTimes[lastTicket].real += endTime - startTime;
+      else
+        throw new Error(
+          `Start time is greater than end time for ticket: ${ticket}`
+        );
     });
 
     return Object.values(ticketTimes);
