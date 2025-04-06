@@ -41,14 +41,14 @@ class TimeTracker {
   track() {
     const tickets = this.ticketsInput.read().flat();
     const estimatedTimes = this.timeConverter
-      .matrixToMin(this.estimatedTimesInput.read(undefined, tickets.length))
+      .matrixToMin(this.estimatedTimesInput.read(undefined, tickets.length, 2))
       .flat();
     const days = this.daysInput.read(undefined, tickets.length).flat();
     const startTimes = this.timeConverter
-      .matrixToMin(this.startTimesInput.read(undefined, tickets.length))
+      .matrixToMin(this.startTimesInput.read(undefined, tickets.length, 2))
       .flat();
     const endTimes = this.timeConverter
-      .matrixToMin(this.endTimesInput.read(undefined, tickets.length))
+      .matrixToMin(this.endTimesInput.read(undefined, tickets.length, 2))
       .flat();
 
     const weekWorkingDays = this.getWeekWorkingDays(days);
@@ -176,6 +176,10 @@ class TimeTracker {
     const timesMat = distributedTimes.map((ticket) => [
       GeneralUtils.round(ticket.total),
     ]);
+
+    namesDaysMat.push(["TOTAL", "Mon-Fri"]);
+    const sum = (arr) => arr.reduce((acc, curr) => acc + curr);
+    timesMat.push([sum(distributedTimes.map((ticket) => ticket.total))]);
 
     return GeneralUtils.concatMatricesHorizontally(
       namesDaysMat,
