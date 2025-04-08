@@ -21,8 +21,6 @@ class TimeTracker {
     summaryOutput,
     distributedOutput
   ) {
-    this.PREVIOUS_TICKET_FLAG = "prev";
-
     this.ticketsInput = ticketsInput;
     this.estimatedTimesInput = estimatedTimesInput;
     this.daysInput = daysInput;
@@ -39,17 +37,19 @@ class TimeTracker {
   }
 
   track() {
-    const tickets = this.ticketsInput.read().flat();
-    const estimatedTimes = this.timeConverter
-      .matrixToMin(this.estimatedTimesInput.read(undefined, tickets.length, 2))
-      .flat();
-    const days = this.daysInput.read(undefined, tickets.length).flat();
     const startTimes = this.timeConverter
-      .matrixToMin(this.startTimesInput.read(undefined, tickets.length, 2))
+      .matrixToMin(this.startTimesInput.read(undefined, undefined, 2))
       .flat();
     const endTimes = this.timeConverter
-      .matrixToMin(this.endTimesInput.read(undefined, tickets.length, 2))
+      .matrixToMin(this.endTimesInput.read(undefined, startTimes.length, 2))
       .flat();
+    const estimatedTimes = this.timeConverter
+      .matrixToMin(
+        this.estimatedTimesInput.read(undefined, startTimes.length, 2)
+      )
+      .flat();
+    const tickets = this.ticketsInput.read(undefined, startTimes.length).flat();
+    const days = this.daysInput.read(undefined, startTimes.length).flat();
 
     const weekWorkingDays = this.getWeekWorkingDays(days);
     const ticketTimes = this.getTicketTimes(
@@ -93,14 +93,8 @@ class TimeTracker {
     let lastTicket, startTime, endTime;
 
     tickets.map((ticket, ticketIdx) => {
-      if (
-        ticket.length > 0 &&
-        ticket.toLowerCase() !== this.PREVIOUS_TICKET_FLAG
-      )
-        lastTicket = ticket.toLowerCase();
-
+      if (ticket.length > 0) lastTicket = ticket.toLowerCase();
       if (!lastTicket) throw new Error("No last ticket available");
-
       if (!ticketTimes[lastTicket]) {
         ticketTimes[lastTicket] = {
           name: lastTicket,
@@ -114,9 +108,12 @@ class TimeTracker {
 
       startTime = startTimes[ticketIdx];
       // If there isn't an end time for the ticket, set it to start time of
-      // the next ticket, unless there's no data available
+      // the next ticket. If it's the final ticket, use now's time.
       if (endTimes[ticketIdx] > 0) {
         endTime = endTimes[ticketIdx];
+      } else if (ticketIdx === tickets.length - 1) {
+        const now = new Date();
+        endTime = this.timeConverter.toMin(now.getHours(), now.getMinutes());
       } else if (startTimes[ticketIdx + 1] > 0) {
         endTime = startTimes[ticketIdx + 1];
       } else throw new Error(`No end time available for ticket: ${lastTicket}`);

@@ -33,19 +33,22 @@ class SpreadsheetIOAdapter {
           hasData || row.some((value) => value.length > 0 || value > 0),
         false
       );
+    const isValidMinDim = (min) => typeof min === "number" && min >= 0;
     if (values.length > 0 && values[0].length > 0) {
       let i, rows;
+      const finalMinRows = isValidMinDim(minRows) ? minRows - 1 : 0;
       for (i = 0; i < values.length; i++) {
         rows = values.slice(i);
-        if (i > (minRows - 1 || 0) && !hasData(rows)) {
+        if (i > finalMinRows && !hasData(rows)) {
           values = values.slice(0, i);
         }
       }
 
       let j, cols;
+      const finalMinCols = isValidMinDim(minCols) ? minCols - 1 : 0;
       for (j = 0; j < values[0].length; j++) {
         cols = values.map((row) => row.slice(j));
-        if (j > (minCols - 1 || 0) && !hasData(cols)) {
+        if (j > finalMinCols && !hasData(cols)) {
           values = values.map((row) => row.slice(0, j));
         }
       }

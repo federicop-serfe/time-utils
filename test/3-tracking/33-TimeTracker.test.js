@@ -1,6 +1,6 @@
 const { setup, teardown, suite, test } = require("mocha");
 const { assert } = require("chai");
-const { restore, stub, spy } = require("sinon");
+const { restore, stub, spy, useFakeTimers } = require("sinon");
 const TimeTracker = require("../../src/3-tracking/33-TimeTracker");
 
 suite("TimeTracker", function () {
@@ -58,20 +58,30 @@ suite("TimeTracker", function () {
 
   suite("getTicketTimes", function () {
     let tickets, estimatedTimes, startTimes, endTimes;
+    let clock;
+
+    setup(function () {
+      clock = useFakeTimers(new Date("December 21, 2000 3:40:00").getTime());
+    });
+
+    teardown(function () {
+      clock.restore();
+    });
 
     /*
-        - The last value provided at the estimatedTimes array 
-        should be the one considered
+        - The last value provided at the estimatedTimes array should be 
+        the one considered
         - Should be case insensitive
-        - Should allow using the "previous" flag (even multiple times)
+        - If there isn't a ticket name, it should consider the previous one
         - Should compute timestamp differences and add them to the total
-        - Should fill endTimes in case they aren't provided
+        - Should fill endTimes in case they aren't provided (either with 
+        the following start time or now's time at the end of the tickets)
         - Should consider internal empty tickets as "previous" tickets
     */
     test("returns correct ticket times", function () {
-      tickets = ["TICKET1", "", "ticket2", "ticket1", "PREV", "prev"];
-      estimatedTimes = [0, 0, 60, 0, 240, 0];
-      startTimes = [0, 35, 70, 125, 160, 180];
+      tickets = ["TICKET1", "", "ticket2", "ticket1", "", "", "TICKET3"];
+      estimatedTimes = [0, 0, 60, 0, 240, 0, 30];
+      startTimes = [0, 35, 70, 125, 160, 180, 200];
       endTimes = [30, 60, 120, 150, 0, 190];
 
       const result = timeTracker.getTicketTimes(
@@ -84,6 +94,7 @@ suite("TimeTracker", function () {
       assert.deepEqual(result, [
         { name: "ticket1", real: 110, estimated: 240 },
         { name: "ticket2", real: 50, estimated: 60 },
+        { name: "ticket3", real: 20, estimated: 30 },
       ]);
     });
 
@@ -103,24 +114,8 @@ suite("TimeTracker", function () {
       }, /Start time is greater than end time for ticket: ticket1/);
     });
 
-    test("throws if no end time is available", function () {
-      tickets = ["ticket1"];
-      estimatedTimes = [0];
-      startTimes = [0];
-      endTimes = [0];
-
-      assert.throws(() => {
-        timeTracker.getTicketTimes(
-          tickets,
-          estimatedTimes,
-          startTimes,
-          endTimes
-        );
-      }, /No end time available for ticket: ticket1/);
-    });
-
-    test("throws if there's a previous flag wihout a ticket", function () {
-      tickets = ["prev", "ticket1"];
+    test("throws if there isn't a previous ticket", function () {
+      tickets = ["", "ticket1"];
       estimatedTimes = [0, 0];
       startTimes = [0, 10];
       endTimes = [5, 15];
