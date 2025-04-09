@@ -35,11 +35,6 @@ suite("BestEffortTimeBalancer", function () {
           0
         ) >= totalWeekTime;
       assert.isTrue(timesSumTotalWeekTime);
-      //const faketimesDontExceedMaxDiscount = fakeTimes.reduce(
-      //  (verifies, curr) => verifies && curr.fake <= maxDiscount * curr.real,
-      //  true
-      //);
-      //assert.isTrue(faketimesDontExceedMaxDiscount);
       const balancingIsNonNegative = tickets.reduce(
         (verifies, curr) =>
           verifies && curr.real + findFake(fakeTimes, curr.name) >= 0,
