@@ -24,7 +24,9 @@ class PERTEstimator {
   }
 
   estimate() {
-    const guesses = this.timeConverter.matrixToMin(this.guessesInput.read());
+    const guesses = this.timeConverter.matrixToMin(
+      this.guessesInput.read(undefined, 3, 6)
+    );
 
     guesses.forEach((guess) =>
       guess.forEach((row) => {
@@ -42,11 +44,15 @@ class PERTEstimator {
       GeneralUtils.round((timeArr[2] - timeArr[0]) / 6)
     );
 
-    const EE = GeneralUtils.round(subtasksEE.reduce((acc, curr) => acc + curr));
+    const EE = GeneralUtils.round(
+      subtasksEE.reduce((acc, curr) => acc + curr),
+      0
+    );
     const SD = GeneralUtils.round(
       Math.sqrt(
         subtasksSD.map((sd) => sd * sd).reduce((acc, curr) => acc + curr)
-      )
+      ),
+      0
     );
     const E = GeneralUtils.round(EE + this.risk * SD);
     const percentualRisk = EE > 0 ? Math.round(((E - EE) / EE) * 100) : 0;
