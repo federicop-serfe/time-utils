@@ -174,7 +174,9 @@ class TimeTracker {
       GeneralUtils.round(ticket.total),
     ]);
 
-    namesDaysMat.push(["TOTAL", "Mon-Fri"]);
+    const firstDay = distributedTimes[0].day;
+    const lastDay = distributedTimes[distributedTimes.length - 1].day;
+    namesDaysMat.push(["TOTAL", `${firstDay}-${lastDay}`]);
     const sum = (arr) => arr.reduce((acc, curr) => acc + curr);
     timesMat.push([sum(distributedTimes.map((ticket) => ticket.total))]);
 
