@@ -3,7 +3,7 @@ if (typeof GeneralUtils === "undefined") {
 }
 
 // Abstract class for strategy design pattern
-class TimeBalancer {
+class TimeBalancingStrategy {
   // Input: ticketTimes = [{name, real, estimated}], totalWeekTime
   // Output: fakeTimes = [{name, fake}]
   // Times in minutes
@@ -12,7 +12,7 @@ class TimeBalancer {
   }
 }
 
-class LPBalancer extends TimeBalancer {
+class LPBalancer extends TimeBalancingStrategy {
   constructor(maxDiscount, maxSlack, fallback) {
     super();
     this.maxDiscount = maxDiscount;
@@ -105,7 +105,7 @@ class LPBalancer extends TimeBalancer {
     In the cases where I've worked more than expected, time substraction takes place 
     to look good on paper.
   */
-class BestEffortBalancer extends TimeBalancer {
+class BestEffortBalancer extends TimeBalancingStrategy {
   // 0 <= deviatedTicketPenalizationFactor <= 1: controls how much time substraction takes place for deviated tasks (0: none, 1: 2E - R, >1: not recommended)
   constructor(deviatedTicketPenalizationFactor) {
     super();
@@ -168,7 +168,7 @@ class BestEffortBalancer extends TimeBalancer {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
-    TimeBalancer,
+    TimeBalancingStrategy,
     LPBalancer,
     BestEffortBalancer,
   };
